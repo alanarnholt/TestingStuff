@@ -1,0 +1,48 @@
+\documentclass{article}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{xcolor}
+<<RpdfcropHOOK, echo = FALSE>>=
+knit_hooks$set(crop = hook_pdfcrop)
+@
+<<setup, echo = FALSE, results= 'hide', message = FALSE, warning = FALSE>>=
+library(PASWR2)
+opts_chunk$set(comment = NA, fig.show = 'hold', fig.height=7, fig.width=7, dev = 'tikz', cache = TRUE, cache.path = './cache/Color/', fig.path = './figure/Color/', prompt = TRUE, highlight = TRUE, tidy = TRUE, tidy.opts=list(blank=TRUE, width.cutoff= 55))
+@
+
+\begin{document}
+
+<<c01Example3REPEAT>>=
+set.seed(3)  # setting seed for reproducibility
+i <- 1
+N <- 10^5 - 1  # N = number of simulations
+N2mat <- matrix(0, N, 2)  # initialize N*2 matrix to all 0's
+repeat{N2mat[i, ] <- sample(1:6, 2, replace = TRUE)
+if (i == N) break
+i <- i + 1
+}
+means <- apply(N2mat, 1, mean)
+T3 <- table(means)
+T3
+@
+
+The function \texttt{plot()} is applied to \texttt{T3} after dividing its contents by \texttt{N}.  The result, with a few embellishments, is presented in Figure \ref{c01PLOTMEANS}. 
+
+
+\begin{figure}[!ht]
+\centering
+<<c01PLOTMEANSfig, echo = FALSE, dev = "tikz", fig.width = 4, fig.height = 4, out.width='.45\\linewidth', crop = TRUE>>=
+par(yaxt="n")
+plot(T3/N, xlab = "Mean of Two Dice", ylab = "", 
+     main="Simulated Sampling Distribution \n of the Sample Mean",
+     ylim=c(0, 6.1/36), lwd = 2, cex.main = 1)
+par(yaxt="s")
+axis(side=2, at=c(0, 1/36, 2/36, 3/36, 4/36, 5/36, 6/36, 5/36, 4/36, 3/36, 2/36, 1/36), 
+     labels=c("0","1/36", "2/36", "3/36", "4/36", "5/36", "6/36", "5/36", 
+              "4/36", "3/36", "2/36", "1/36"), las=1 )
+abline(h=c(0:6)/36, lty=2, col="gray")
+@
+\caption{Graphical representation of the relative frequency of each of the possible means from a simulation of throwing two dice 99,999 times \label{c01PLOTMEANS}}
+\end{figure}
+
+
+\end{document}

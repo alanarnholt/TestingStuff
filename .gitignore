@@ -11,3 +11,15 @@
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf
+.Rproj.user
+
+# My stuff
+TestingPerlHook.tex
+TestingPerlHook.log
+TestingPerlHook.pdf
+TestingStuff.Rproj
+*.aux
+*.bbl
+*.blg
+cache/*
+figure/*
