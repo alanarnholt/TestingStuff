@@ -23,3 +23,6 @@ TestingStuff.Rproj
 *.blg
 cache/*
 figure/*
+TestingPerlHook-concordance.tex
+TestingPerlHook-tikzDictionary
+TestingPerlHook.synctex.gz
