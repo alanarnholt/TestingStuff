@@ -26,3 +26,6 @@ figure/*
 TestingPerlHook-concordance.tex
 TestingPerlHook-tikzDictionary
 TestingPerlHook.synctex.gz
+*.log
+*.pdf
+*.gz
