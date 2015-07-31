@@ -1,0 +1,653 @@
+\documentclass{beamer}
+\usetheme{Darmstadt}
+\usecolortheme{seagull}
+\usefonttheme[onlylarge]{structurebold}
+\setbeamerfont*{frametitle}{size=\normalsize,series=\bfseries}
+\setbeamertemplate{navigation symbols}{}
+\newcommand{\fullpageimage}[1]{
+\setbeamertemplate{background canvas}{\centering\includegraphics[width=
+\paperwidth,height=\paperheight,keepaspectratio]{{#1}}}
+\begin{frame}[plain]{}\end{frame}
+}
+ 
+\usepackage[utf8]{inputenc}
+%\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{xspace}
+\usepackage{alltt}
+%\usepackage[colorlinks=true,urlcolor=blue]{hyperref}
+
+\usepackage{Sweave}
+\setkeys{Gin}{width=0.95\textwidth}
+
+\newcommand{\code}[1]{\texttt{\small #1}}
+\newcommand{\strong}[1]{{\normalfont\fontseries{b}\selectfont #1}}
+\definecolor{dark-green}{rgb}{0,0.45,0}
+\let\pkg=\strong
+\def\RR{\textsf{R}\xspace}
+\def\SP{\texttt{S-PLUS}\xspace}
+\def\SS{\texttt{S}\xspace}
+\def\SIII{\texttt{S3}\xspace}
+\def\SIV{\texttt{S4}\xspace}
+
+\newcommand{\email}[1]{\href{mailto:#1}{\normalfont\texttt{#1}}}
+
+\title{\bf Analysing spatio-temporal data with R }
+\author{Edzer Pebesma, Benedict Gr\"{a}ler}
+
+\institute[University of M\"unster]
+{
+\includegraphics[width=1.5cm]{rdc} \hspace{.3cm}
+\includegraphics[width=3.6cm]{ifgi-logo_int}\hspace{.3cm}
+\includegraphics[width=3.2cm]{52n_logo+claim} \\ \vspace{.5cm}
+{\color{gray}\tt edzer.pebesma@uni-muenster.de}
+}
+\date{\small Spatial Statistics workshop, Columbus OH\\ Jun 4, 2013}
+
+<<label=afig,echo=FALSE,eval=FALSE>>= 
+.PngNo <- .PngNo + 1; file <- paste("Fig-", .PngNo, ".pdf", sep="")
+pdf(file=file, width = 4.5, height = 4.75, pointsize = 8)
+opar <- par(no.readonly = TRUE)
+par(mar=c(4,4,2,1)+0.1)
+@
+
+<<label=zfig,echo=FALSE,eval=FALSE>>= 
+par(opar)
+dev.null <- dev.off()
+cat("\\includegraphics[width=0.95\\textwidth]{", file, "}\n\n", sep="")
+@
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+<<echo=FALSE>>=
+rm(list=ls())
+.owidth <- getOption("width")
+#options("width"=36)
+.PngNo <- 0
+@
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+<<echo=FALSE>>=
+options("StartupBanner"="off")
+@
+
+\begin{frame}[fragile,plain]{What are spatio-temporal data?}
+\begin{tiny}
+<<>>=
+head(cars)
+summary(cars)
+@
+\end{tiny}
+\code{?cars} reveals these data were recorded in the 1920s. 
+The metric units (mph, ft) suggest: UK or US. 
+
+Are these data spatio-temporal?
+
+\pause
+No -- we (geographers, geoinformaticians, geo-whatevers)
+\begin{itemize}
+\item 
+{\color{red} insist on {\em known} coordinates $x,y,t$}
+\item prefer known reference systems -- but don't insist?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile,plain]{Are these spatio-temporal data?}
+\begin{tiny}
+<<>>=
+data(Produc, package="plm")
+head(Produc)
+@
+<<echo=FALSE>>=
+options("width"=36)
+@
+\end{tiny}
+Answer:
+\pause
+\begin{itemize}
+\item {\color{red} Yes}, if you're willing to do a lot of understanding,
+\item {\color{red} No}, if you don't know where ALABAMA is, or from which
+country it is a state, or if you don't know what the {\em year} 1970 refers to.
+\item state and year do refer, but in a soft (unstandardized) way.
+\end{itemize}
+\end{frame}
+
+\frame{\frametitle{Organisation}
+\begin{description}
+\item[9:00–10:30] R, spatial data in R
+\item[11:00-12:30] time, time series data in R
+\item[14:00-15:30] spatio-temporal data types, operations, statistics
+\item[16:00-17:00] ... ctd., flexible, exercises, interaction.
+\end{description}
+}
+
+\begin{frame}[fragile,plain]{R}
+\begin{itemize}
+\item what is R?
+\item what is an R package? what is a vignette?
+\item what is CRAN?
+\item where is the spatial task view? spatio-temporal task view?
+\item how do I find in package {\em x} how to do task {\em y}?
+\item how do I find out how to do ... with R?
+\end{itemize} \pause
+\begin{alltt}
+\begin{small}
+> library(fortunes)
+> fortune("only how")
+
+Evelyn Hall: I would like to know how (if) I can extract some 
+of the information from the summary of my nlme.
+
+Simon Blomberg: This is R. There is no if. Only how.
+   -- Evelyn Hall and Simon 'Yoda' Blomberg
+      R-help (April 2005)
+\end{small}
+\end{alltt}
+\end{frame}
+
+\begin{frame}[fragile,plain]{I will assume you understand this:}
+\begin{columns}
+\begin{column}{6cm}
+
+\begin{tiny}
+<<keep.source=TRUE>>=
+a = data.frame(varA = c(1,1.5,2), 
+	varB = c("a", "a", "b"))
+a[1,]
+a[,1]
+a[[1]]
+a[1]
+a[, 1, drop=FALSE]
+@
+\end{tiny}
+
+\end{column}
+\begin{column}{6cm}
+\begin{tiny}
+<<>>= 
+a["varA"]
+a[c("varA", "varB")]
+a$varA
+a$varA <- 3:1
+a
+@
+\end{tiny}
+\end{column}
+\end{columns}
+\end{frame}
+
+\frame{\frametitle{Spatial data}
+Spatial data refresher:
+\begin{itemize}
+\item points, lines, polygons, grids
+\item storage: shapefiles, grid files, in- or out-of-memory
+\item data bases (e.g. PostGIS): geometry + attributes
+\item topology representation of polygons
+\item spatial indexes
+\item projected data, or long/lat?
+\end{itemize}
+}
+
+\frame{\frametitle{What makes a GIS a GIS?}
+\pause
+\begin{itemize}
+\item {\color{red}store, retrieve} spatial data
+\item {\color{red}visualize} spatial data
+\item {\color{red}manipulate} spatial data
+\item {\color{red}analyze, model} spatial data
+ \begin{itemize}
+ \item analyze attributes, as in a data base
+ \item analyze geometries, or attributes depending on geometry
+ \end{itemize}
+\end{itemize}
+
+{\em ``A geographic information system is a system designed to
+capture, store, manipulate, analyze, manage, and present all types
+of geographical data''} (wikipedia, from esri.com)
+
+{\em ``In the simplest terms, GIS is the merging of cartography, statistical
+analysis, and database technology.''} (wikipedia)
+}
+
+\begin{frame}[fragile,plain]{{\em How} to get spatial data into R?}
+Simple answer: using \code{rgdal} (\code{readGDAL} or \code{readOGR}).
+\pause
+More complete:
+\begin{itemize}
+\item \code{readGDAL} or \code{readOGR} read the whole data set from disk 
+into R, that is, into the computers main or working memory (``RAM'').
+\item for grids, there are low-level routines: \code{GDAL.open} opens a
+file, and \code{getRasterData} (or \code{getRasterTable}) to read {\em portions} of data; but
+also (little known!):
+\begin{small}
+<<eval=TRUE>>=
+library(rgdal)
+x = GDAL.open("NDV_19980401_Gambia__the_Extract.tif")
+object.size(x[])
+object.size(x[1:100, 1:100])
+@
+\end{small}
+reads only the portion requested into memory
+\item Today, people use \code{raster} when disk caching is needed
+\end{itemize}
+
+\end{frame}
+
+\frame{\frametitle{overlay: visual}
+base plot: plotting sequentially, e.g.
+
+lattice (spplot):
+
+note: transparency is a colour attribute
+}
+
+\begin{frame}[fragile,plain]{Overlay: visual - 1. by incrementally plotting}
+\begin{columns}
+\begin{column}{6cm}
+\begin{tiny}
+<<keep.source=TRUE>>=
+library(sp)
+data(meuse.grid)
+coordinates(meuse.grid) = ~x+y
+gridded(meuse.grid) = TRUE
+image(meuse.grid["dist"])
+data(meuse)
+coordinates(meuse) = ~x+y
+points(meuse)
+# add lines, legend, text, ...
+@
+\end{tiny}
+
+\end{column}
+\begin{column}{6cm}
+<<results=st.tex,echo=FALSE>>= 
+<<afig>>
+image(meuse.grid["dist"])
+points(meuse)
+<<zfig>>
+@
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile,plain]{Overlay: visual - 2. using compound plot functions}
+\begin{columns}
+\begin{column}{6cm}
+\begin{tiny}
+<<keep.source=TRUE>>=
+size = meuse$zinc / mean(meuse$zinc)
+pts = list("sp.points", meuse, pch = 1, cex = size)
+demo(meuse, echo=FALSE, ask=FALSE)
+riv = list("sp.polygons", meuse.riv)
+plt = spplot(meuse.grid["dist"], sp.layout = list(pts, riv))
+class(plt)
+print(plt)
+@
+\end{tiny}
+\begin{itemize}
+\item a plot object is created, which contains everything
+\item this object can be manipulated, but the most used
+option is to print (i.e., show) it.
+\end{itemize}
+
+\end{column}
+\begin{column}{6cm}
+<<results=tex,echo=FALSE>>= 
+<<afig>>
+print(plt)
+<<zfig>>
+@
+\end{column}
+\end{columns}
+\end{frame}
+
+\frame{\frametitle{Cartography?}
+\begin{itemize}
+\item A map is a plot with longitude and latitude, and a controlled
+aspect ratio; any plotting software can ``do'' maps, however
+\item reference comes from coast lines, rivers, lakes, topography, political boundaries, cities, land use etc.
+\item reference grid lines (parallels, meridians) may be required, and be non-straigh
+\item axes tics usually show little, but some information
+\item custom elements are often present (arrow, scale bar, multi-type legend)
+\item label placement is challenging (but see: rgeos::polyLabel)
+\end{itemize}
+}
+
+\frame{\frametitle{What is R good at?}
+\begin{itemize}
+\item simple, repetitive graphs:
+ \begin{itemize}
+ \item many, similar graphs, over different pages
+ \item many graphs combined in a lattice (grid: lattice, ggplot)
+ \end{itemize}
+\item non-interactive, reproducible use
+\item control of all details
+\item richness of graphics devices, 
+\item portability, cross-platform, options for deployment
+\end{itemize}
+
+{\bf What is R bad at?}
+\begin{itemize}
+\item interactive use: zoom, pan, edit graph element etc.
+\item control is not trivial
+\item (?) incompatible plotting systems: base, lattice, ggplot, ...
+\end{itemize}
+}
+
+\frame{\includegraphics{def2}\\
+\begin{tiny}
+G. Espindola, 2012: Spatiotemporal trends of land use change in the Brazilian Amazon; INPE
+\end{tiny}}
+
+\begin{frame}[fragile,plain]{Two work horses: rgdal, rgeos}
+\begin{tiny}
+\begin{alltt}
+> library(rgdal)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 1.9.1, released 2012/05/15
+Path to GDAL shared files: /usr/share/gdal/1.9
+Loaded PROJ.4 runtime: Rel. 4.7.1, 23 September 2009, [PJ\_VERSION: 470]
+Path to PROJ.4 shared files: (autodetected)
+>
+> library(rgeos)
+Loading required package: stringr
+Loading required package: plyr
+rgeos: (SVN revision (unknown))
+GEOS runtime version: 3.3.3-CAPI-1.7.4 
+Polygon checking: TRUE 
+\end{alltt}
+\end{tiny}
+\begin{itemize}
+\item \code{rgdal} links to the GDAL (raster) and OGR (vector) data I/O library, as well as \code{PROJ.4} for
+CRS (coordinate reference systems) (re)projections
+\item \code{rgeos} links to the GEOS (Geometry Open Source) library, which powers PostGIS: does the ``usual''
+geometry operations for features
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile,plain]{What is numerical overlay?}
+
+Method \code{over(x,y)} provides:
+consistent spatial overlay for points, grids, lines and polygons:
+{\color{red}at the spatial locations} of object x retrieve the indexes or
+attributes from spatial object y 
+{\color{red} and \code{NA} in case of no match}
+(index \code{vector} if y has only geometry, attribute \code{data.frame} if it has attributes too).
+\begin{tiny}
+<<>>=
+over(meuse, geometry(meuse.grid))[1:10]
+over(meuse, meuse.grid)[1:3,]
+@
+\end{tiny}
+
+In {\color{brown}SQL}, this resembles a left outer join of two tables
+\end{frame}
+
+\begin{frame}[fragile,plain]{What if there are no, or multiple matches? }
+No match:
+\begin{tiny}
+<<keep.source=TRUE>>=
+m2 = meuse[-1,] # remove first record
+over(meuse, geometry(m2))[1:5]
+over(meuse, m2)[1:3, 1:4]
+@
+\end{tiny}
+
+\pause 
+
+Multiple matches:
+\begin{tiny}
+<<keep.source=TRUE>>=
+m2 = meuse[c(1,1:155),] # duplicate first record
+over(meuse, geometry(m2))[1:5]
+over(meuse, m2)[1:3, 1:4]
+@
+\end{tiny}
+So, by default, all multiple maches are ignored.
+\end{frame}
+
+\begin{frame}[fragile,plain]{What if we {\color{red} want} multiple matches?}
+Multiple indices:
+\begin{tiny}
+<<keep.source=TRUE>>=
+m2 = meuse[c(1,1:155),] # duplicate first record
+over(meuse, geometry(m2), returnList = TRUE)[1:3]
+@
+\end{tiny}
+
+Multiple tables:
+\begin{tiny}
+<<keep.source=TRUE>>=
+over(meuse, m2[1:4], returnList = TRUE)[1:2]
+@
+\end{tiny}
+
+\end{frame}
+
+\begin{frame}[fragile,plain]{What if we want to {\em compute over} multiple matches?}
+\begin{tiny}
+<<keep.source=TRUE>>=
+m2 = meuse[c(1,1:155),] # duplicate first record
+over(meuse, m2[1:4], returnList = FALSE, fn = max)[1:2,1:4]
+@
+\end{tiny}
+Although this is the same as
+\begin{tiny}
+<<keep.source=TRUE>>=
+over(meuse, meuse)[1:2,1:4]
+@
+\end{tiny}
+in the first case, actually the maximum is computed (\code{fn =
+max}) over the multiple matched records, and returned, as record
+values. 
+
+In fact, this process is called {\color{red}\em aggregation}.
+\end{frame}
+
+\begin{frame}[fragile,plain]{Aggregation, the R way}
+
+\begin{columns}
+\begin{column}{6cm}
+\begin{tiny}
+<<keep.source=TRUE>>=
+# for a data.frame, based on a table column:
+m = as(meuse, "data.frame")[c("zinc", "lead")]
+aggregate(m, by = list(ffreq = meuse$ffreq), mean)
+
+# create a coarse grid:
+off = gridparameters(meuse.grid)$cellcentre.offset + 20
+gt = GridTopology(off, c(400,400), c(8,11))
+SG = SpatialGrid(gt)
+proj4string(SG) = proj4string(meuse.grid)
+# for a Spatial object, based on another Spatial object:
+agg = aggregate(meuse[c("zinc","lead")], SG, FUN = mean)
+spplot(agg, sp.layout = pts)
+@
+\end{tiny}
+
+\end{column}
+\begin{column}{6cm}
+<<results=tex,echo=FALSE>>= 
+<<afig>>
+print(spplot(agg, sp.layout = list("sp.points", meuse, col = "green", cex=.5), col.regions = bpy.colors()))
+<<zfig>>
+@
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile,plain]{Which pixels are covered by points? Selection with \code{over}}
+
+\begin{columns}
+\begin{column}{6cm}
+\begin{tiny}
+<<keep.source=TRUE>>=
+SP = as(SG, "SpatialPolygons")
+over(SP, geometry(meuse))
+length(SP[!is.na(over(SP, geometry(meuse)))])
+length(SP[meuse]) # equivalent!
+plot(as(SP[meuse], "SpatialPolygons"))
+points(meuse, col = 'red')
+@
+\end{tiny}
+
+\end{column}
+\begin{column}{6cm}
+<<results=tex,echo=FALSE>>= 
+<<afig>>
+plot(SP[meuse])
+points(meuse, col = 'red')
+<<zfig>>
+@
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Possible over methods}
+Spatial data (see {\tt\color{dark-green} overlay and aggregation} vignette in sp):
+
+\begin{table}[h]
+\begin{tabular}{|l|cccc|} \hline
+              & {\tt y}: points & {\tt y}: lines & {\tt y}: polygons & {\tt y}: pixels/grids \\ \hline
+{\tt x}: points        &   sp   &    rgeos &      sp     &      sp      \\
+{\tt x}: lines         &   rgeos&    rgeos &      rgeos  &      rgeos   \\
+{\tt x}: polygons      &   sp   &    rgeos &      rgeos  &      sp      \\
+{\tt x}: pixels/grids  &   sp   &    rgeos &      sp     &      sp      \\ \hline
+\end{tabular}
+\caption{ \code{over} methods implemented for different \code{x}
+and \code{y} arguments.  }
+\label{tab}
+\end{table}
+
+Spatio-temporal data: see \code{spacetime} vignette
+\end{frame}
+
+\begin{frame}[fragile,plain]{Nine-intersection model}
+The \href{http://en.wikipedia.org/wiki/DE-9IM}{nine-intersection model}
+is a comprehensive model, from which most relations (touches, overlaps, 
+intersects) can be derived -- see \url{http://en.wikipedia.org/wiki/DE-9IM}
+\begin{tiny}
+<<keep.source=TRUE>>=
+library(rgeos)
+gRelate(meuse.riv, meuse.riv)
+gRelate(meuse.riv, SP)
+gRelate(meuse.riv, SP, byid = TRUE)[1:5]
+@
+\end{tiny}
+\end{frame}
+
+\begin{frame}{Exercises: spatial}
+\begin{itemize}
+\item run the examples of vignette \code{intro\_sp} in package \code{sp}
+\item run the examples of vignette \code{gstat} in package \code{gstat}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Representing time series data in R}
+\code{zoo}:
+\begin{itemize}
+\item \code{zoo}: (S3) classes for ordered observations, including time series
+\item powerful temporal aggregation, using \code{as.yearmon}, \code{as.yearqtr}
+etc, and user-supplied grouping functions
+\item \code{na.fill}, \code{na.approx}, \code{na.spline}
+\end{itemize}
+\code{xts}: 
+\begin{itemize}
+\item builds on top of \code{zoo}
+\item (S3) explicit time reference required
+\item ``supports'' several time based systems: "Date", "POSIXt", "chron",
+"dates", "times", "timeDate", "yearmon", "yearqtr", "xtime"
+\item ... but stores time as POSIXct, remembers original class.
+\item ISO 8601 time (interval) selection
+\item partly written in C, increasing performance; high-speed trading
+\end{itemize}
+Interestingly, both have no notion of time {\em intervals}!
+\end{frame}
+
+\begin{frame}[plain]{Space-time layouts}
+\includegraphics[width=.82\columnwidth]{jss816-005}
+\end{frame}
+
+\begin{frame}[plain]{Class layout in \code{spacetime}}
+\includegraphics[width=.7\columnwidth]{cls}
+\end{frame}
+
+\begin{frame}[plain]{STFDF example: \code{data(Produc)}}
+\includegraphics[width=.7\columnwidth]{produc}
+\end{frame}
+
+\begin{frame}[plain]{STFDF example: \code{data(Produc)}}
+\includegraphics[width=.7\columnwidth]{tp}
+\end{frame}
+
+\begin{frame}[plain]{STFDF example: \code{data(Produc)}}
+\includegraphics[width=.7\columnwidth]{ts}
+\end{frame}
+
+\begin{frame}[plain]{Goals of \code{spacetime}}
+Provide classes and methods for a wide range of spatio-temporal data.
+
+Methods include
+\begin{itemize}
+\item \code{stConstruct}, construction from long, space-wide,
+or time-wide tables, and from \code{xts} or \code{Spatial*} objects
+\item selection using \code{[}, potentially resulting in \code{xts} or
+\code{Spatial*} objects
+\item coercion to/from \code{Spatial*}, \code{xts}, \code{zoo}, \code{stpp}, \code{RasterStack}, ...
+\item ``pass on'' \code{na.omit}, \code{na.interp}, \code{aggregate} etc.
+\item spatio-temporal \code{over} and \code{aggregate}
+\item plotting
+\item interface with \code{raster}, \code{grass}, \code{sos4R}, ...
+\end{itemize}
+\end{frame}
+
+\begin{frame}[plain]{time instance, intervals, movement}
+\includegraphics[width=.9\columnwidth]{move}
+\end{frame}
+
+\begin{frame}[plain]{matching time \& time intervals}
+\includegraphics{ti}
+\end{frame}
+
+\begin{frame}{Spatio-temporal statistics}
+\begin{itemize}
+\item See task view on CRAN for overview of packages
+\item Spatio-temporal geostatistics: 
+ \begin{itemize}
+ \item how dense is our data in \{space, time\}?
+ \item st covariance models: anisotropy, seperable, metric, product-sum,
+ sum-metric; st asymmetry; 
+ \item explicit formulation of dynamics through (S)PDE's -- often use Kalman filtering,
+ MCMC, or INLA
+ \end{itemize}
+
+\item Spatio-temporal point patterns: 
+ \begin{itemize}
+ \item separability vs ST interactions, 
+ \item first- (density) and second-order (K-function) separability,
+stationarity or inhomogeneity.
+ \end{itemize}
+\item Spatio-temporal lattice data: e.g. spatial panel models (econometrics),
+disease clusters, epidemiology ({\tt surveillance})
+\item Trajectory analysis: visual analytics, clustering (knowledge
+discovery), classifying activities, home range estimation, time
+geography and alibi problems.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Exercise:}
+\begin{enumerate}
+\item run the commands in vignette \code{jss816} in package \code{spacetime}
+\item run the commands in vignette \code{st} in package \code{gstat}
+\item run the commands in the vignette \code{stpp} in package \code{stpp}
+(this is harder; hint: look up the JSTATSOFT paper)
+\end{enumerate}
+\end{frame}
+
+\end{document} 
