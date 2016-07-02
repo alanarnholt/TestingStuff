@@ -1,15 +1,17 @@
-# README
-Alan Arnholt  
-7/2/2016  
+---
+title: "README"
+author: "Alan Arnholt"
+date: "7/2/2016"
+output: 
+  html_document: 
+    keep_md: yes
+---
 
 # Testing Stuff
 
 This is a collection of junk test files.
 
-
-```r
+```{r}
 set.seed(123)
 hist(rnorm(10000), col = "pink", breaks = "Scott")
 ```
-
-![](README_files/figure-html/unnamed-chunk-1-1.png)<!-- -->
