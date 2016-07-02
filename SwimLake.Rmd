@@ -1,0 +1,24 @@
+---
+title: "Mixed 250 Mile Freestyle"
+author: ""
+date: ""
+output: html_document
+---
+
+
+
+Name                 |                               Age  |                      Hometown           
+---------------------|------------------------------------|--------------------------------
+Arnholt, Alan |                                   M52       |                  Boone, NC
+Arnholt, Mark  |                                  M44       |          Albuquerque, NM
+Benoit, Katie   |                                 W36       |      Colorado Spring, CO
+Casper Sr., Mike |                               M73        |               Calabash NC
+Clinton, Bob      |                                M63      |                    Logan, UT
+Dennis, Justin     |                              M53       |             Carbondale, IL
+Gerngross, Peter    |                            M46        |             Pearland, TX
+Gridley, Gordon      |                           M43        |              Syracuse, UT
+Kaiser, Linda         |                            F65      |                 Honolulu, HI
+Miller, Richard   |                                M61      |                   Boone, NC              
+Milne, Robert    |                                M67       |          Albuquerque, NM                 
+Parry, Josh     |                                 M34        |  Colorado Springs, CO                   
+Taylor Mitch     |                                 M63        |          Sandia Park, NM
